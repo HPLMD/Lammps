@@ -1,0 +1,163 @@
+  
+shell mkdir data dump msd density 
+
+#----------------------------------------------------#
+
+variable    T  equal  298    # K 
+variable seed  equal  12345 
+variable    dt equal  1      # fs  
+
+#----------------------------------------------------#
+
+units           real
+boundary        p p p
+atom_style      full
+pair_style      lj/cut/coul/long 10.0
+pair_modify     mix geometric
+special_bonds   lj/coul 0.0 0.0 0.5
+kspace_style    pppm 1.0e-4
+bond_style      harmonic
+angle_style     harmonic
+dihedral_style  opls
+improper_style  cvff
+
+#----------------------------------------------------#
+ 
+read_data sys1.data
+
+group water     type 1 2
+group O_H2O     type 1
+group PFOA      type 3:10
+group O_PFOA    type 8
+group wall1     type 11:14
+group wall2     type 15 
+group leftwall  type 16
+group rightwall type 17 
+group wall union wall1 wall2 leftwall rightwall  
+group fluid subtract all wall 
+
+variable leftwallnumberatoms  equal count(leftwall)
+variable rightwallnumberatoms equal count(rightwall)
+variable ly   equal ly*1e-10   # m 
+variable lz   equal lz*1e-10   # m 
+variable P    equal 0.1e6      # MPa
+variable convfact equal 1/1.60217662e-9 
+variable F1   equal   ${P}*${ly}*${lz}*${convfact}/${leftwallnumberatoms}   # kcal/mol/A   
+variable F2   equal  -${P}*${ly}*${lz}*${convfact}/${rightwallnumberatoms}  # kcal/mol/A 
+print "${F1} ${F2}" 
+
+#----------------------------------------------------#
+
+neighbor        2.0 bin
+neigh_modify  every 2  delay 10  exclude group wall wall check yes
+
+fix freeze wall setforce 0 0 0
+
+fix xwall PFOA wall/harmonic xhi 4.0 100.0 0.0 4.0 units box pbc yes 
+ 
+thermo 100
+thermo_style custom step pe etotal press 
+
+dump mydump0 all custom 100 ./dump/dump0.lammpstrj id type element mol q x y z  
+dump_modify mydump0 sort id element O H   C C C C F O O H   Ti Ti O Pd   C C C  
+
+min_style cg
+minimize  1e-10 1e-10 10000 10000
+
+undump mydump0
+
+write_data ./data/minimize.data 
+
+reset_timestep 0
+
+timestep ${dt}
+
+unfix freeze 
+
+#----------------------------------------------------#
+
+velocity fluid create ${T} ${seed} rot yes dist gaussian
+
+fix fSHAKE water shake 0.0001 10 0 b 1 a 1
+
+fix mynvt fluid nvt temp ${T} ${T} 100
+
+fix freeze1 wall1 setforce  0 0 0 
+fix freeze2 wall2 setforce  0 0 0 
+fix freeze3 leftwall  setforce NULL 0 0  
+fix freeze4 rightwall setforce NULL 0 0 
+
+fix mynve1 leftwall  nve  
+fix mynve2 rightwall nve 
+fix Fz1 leftwall  aveforce ${F1} 0 0 
+fix Fz2 rightwall aveforce ${F2} 0 0 
+
+
+variable istep equal step
+
+compute MSD1 water msd com yes
+variable msd1x     equal c_MSD1[1]
+variable msd1y     equal c_MSD1[2]
+variable msd1z     equal c_MSD1[3]
+variable msd1xyz   equal c_MSD1[4]
+fix msd1 water print 1000 "${istep} ${msd1x} ${msd1y} ${msd1z} ${msd1xyz}" screen no file ./msd/msd_H2O.data 
+
+compute  MSD2 PFOA msd com yes
+variable msd2x     equal c_MSD2[1]
+variable msd2y     equal c_MSD2[2]
+variable msd2z     equal c_MSD2[3]
+variable msd2xyz   equal c_MSD2[4]
+fix msd2 PFOA print 1000 "${istep} ${msd2x} ${msd2y} ${msd2z} ${msd2xyz}" screen no file ./msd/msd_PFOA.data 
+
+region    density1     block   5 65 EDGE EDGE  EDGE EDGE   units box
+compute bin1 all chunk/atom bin/1d  z lower 0.2 units box region density1
+fix Density_water1  water     ave/chunk 100 10 1000 bin1 density/number norm sample file ./density/H2O_number_density_z.txt
+fix Density_PFOA1   PFOA      ave/chunk 100 10 1000 bin1 density/number norm sample file ./density/PFOA_number_density_z.txt
+
+
+region    density2     block   EDGE EDGE EDGE EDGE  EDGE EDGE   units box
+compute bin2 all chunk/atom bin/1d  x lower 0.2 units box region density2
+fix Density_water2  water     ave/chunk 100 10 1000 bin2 density/number norm sample file ./density/H2O_number_density_x.txt
+fix Density_PFOA2   PFOA      ave/chunk 100 10 1000 bin2 density/number norm sample file ./density/PFOA_number_density_x.txt
+
+
+region leftregion     block EDGE 0 EDGE EDGE EDGE EDGE units box
+region wallregion     block 0 70.7 EDGE EDGE EDGE EDGE units box
+region rightregion    block 70.7 EDGE EDGE EDGE EDGE EDGE units box
+
+group  mobile1 dynamic  O_H2O     region leftregion     every 10
+group  mobile2 dynamic  O_H2O     region wallregion     every 10
+group  mobile3 dynamic  O_H2O     region rightregion    every 10
+group  mobile4 dynamic  O_PFOA    region leftregion     every 10
+group  mobile5 dynamic  O_PFOA    region wallregion     every 10
+group  mobile6 dynamic  O_PFOA    region rightregion    every 10
+
+variable num1    equal count(mobile1)
+variable num2    equal count(mobile2)
+variable num3    equal count(mobile3)
+variable num4    equal count(mobile4)
+variable num5    equal count(mobile5)
+variable num6    equal count(mobile6)
+
+variable posx1 equal xcm(leftwall,x)
+variable posx2 equal xcm(rightwall,x)
+
+compute temp_fluid fluid temp 
+
+thermo		 1000
+thermo_style 	 custom step  ke pe etotal press c_temp_fluid v_posx1 v_posx2 v_num1 v_num2 v_num3 v_num4 v_num5 v_num6  
+
+dump mydump all custom 10000 ./dump/dump.lammpstrj id mol type element q x y z  
+dump_modify mydump sort id element O H   C C C C F O O H   Ti Ti O Pd   C C C
+
+run  1000000
+
+write_data   ./data/equal.data 
+                  								   
+#----------------------------------------------------#
+
+
+
+
+
+ 
