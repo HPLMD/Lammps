@@ -1,0 +1,33 @@
+
+
+# ----------------- Init Section -----------------
+
+units           real
+boundary        p p p
+atom_style      full
+pair_style      lj/cut/coul/long 10.0
+pair_modify     mix geometric
+special_bonds   lj/coul 0.0 0.0 0.5
+kspace_style    pppm 1.0e-4
+bond_style      harmonic
+angle_style     harmonic
+dihedral_style  opls
+improper_style  cvff
+
+# ----------------- Atom Definition Section -----------------
+
+read_data system.data extra/atom/types 7
+read_data ./TiO2/Pd_TiO2.data add append offset 10 7 9 9 1 shift -10 0 0 
+read_data ./Gra1/Gra1.data    add append offset 14 7 9 9 1 #shift 10 0 0
+read_data ./Gra2/Gra2.data    add append offset 15 7 9 9 1 #shift 10 0 0     
+
+# ----------------- Settings Section -----------------
+
+include "system.in.settings"
+
+set type 11 charge  1.0317
+set type 12 charge  0.7228
+set type 13 charge -0.415355688622
+
+write_data sys1.data 
+

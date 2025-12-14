@@ -1,0 +1,83 @@
+# -- Non-bonded interactions --
+pair_coeff      1           1             0.155400   3.165570
+pair_coeff 1 2 0.000000 1.582785
+pair_coeff      2           2             0.000000   0.000000
+
+# -- harmonic bondType parameter  --
+bond_coeff      1               412.2849    1.000000
+
+# -- harmonic angleType parameter  --
+angle_coeff     1               45.7696  109.470000
+
+# -- rigid water model  --
+group watergroup type 1 2
+fix fSHAKE watergroup shake 0.0001 10 100 b 1 a 1
+# -- Non-bonded interactions --
+pair_coeff      3     3       0.066000   3.500000
+pair_coeff 3 4 0.066000 3.500000
+pair_coeff      4     4       0.066000   3.500000
+pair_coeff 3 5 0.066000 3.500000
+pair_coeff 4 5 0.066000 3.500000
+pair_coeff      5     5       0.066000   3.500000
+pair_coeff 3 6 0.083247 3.622844
+pair_coeff 4 6 0.083247 3.622844
+pair_coeff 5 6 0.083247 3.622844
+pair_coeff      6     6       0.105000   3.750000
+pair_coeff 3 7 0.059144 3.213254
+pair_coeff 4 7 0.059144 3.213254
+pair_coeff 5 7 0.059144 3.213254
+pair_coeff 6 7 0.074599 3.326034
+pair_coeff      7     7       0.053000   2.950000
+pair_coeff 3 8 0.105925 3.240370
+pair_coeff 4 8 0.105925 3.240370
+pair_coeff 5 8 0.105925 3.240370
+pair_coeff 6 8 0.133604 3.354102
+pair_coeff 7 8 0.094921 2.974895
+pair_coeff      8     8       0.170000   3.000000
+pair_coeff 3 9 0.117729 3.218695
+pair_coeff 4 9 0.117729 3.218695
+pair_coeff 5 9 0.117729 3.218695
+pair_coeff 6 9 0.148492 3.331666
+pair_coeff 7 9 0.105499 2.954996
+pair_coeff 8 9 0.188944 2.979933
+pair_coeff      9     9       0.210000   2.960000
+pair_coeff 3 10 0.000000 0.000000
+pair_coeff 4 10 0.000000 0.000000
+pair_coeff 5 10 0.000000 0.000000
+pair_coeff 6 10 0.000000 0.000000
+pair_coeff 7 10 0.000000 0.000000
+pair_coeff 8 10 0.000000 0.000000
+pair_coeff 9 10 0.000000 0.000000
+pair_coeff      10     10       0.000000   0.000000
+
+# -- harmonic bondType parameter  --
+bond_coeff      2               268.0000    1.530000
+bond_coeff      3               367.0000    1.330000
+bond_coeff      4               317.0000    1.520000
+bond_coeff      5               450.0000    1.360000
+bond_coeff      6               570.0000    1.230000
+bond_coeff      7               553.0000    0.950000
+
+# -- harmonic angleType parameter  --
+angle_coeff     2               50.0000  109.500000
+angle_coeff     3               77.0000  109.100000
+angle_coeff     4               58.3501  112.700000
+angle_coeff     5               63.0000  111.100000
+angle_coeff     6               70.0000  108.000000
+angle_coeff     7               80.0000  120.400000
+angle_coeff     8               80.0000  121.000000
+angle_coeff     9               35.0000  113.000000
+
+# -- opls dihedralType parameter  --
+dihedral_coeff  1           0.299833    0.000000    0.399976    0.000000
+dihedral_coeff  2          -2.500000    0.000000    0.000000    0.000000
+dihedral_coeff  3           1.299952   -0.049952    0.200048    0.000000
+dihedral_coeff  4          -1.697299   -0.456023    0.584967    0.000000
+dihedral_coeff  5          -2.059751   -0.313098    0.315010    0.000000
+dihedral_coeff  6           1.000239    0.545889    0.450048    0.000000
+dihedral_coeff  7           0.000000    0.545889    0.000000    0.000000
+dihedral_coeff  8           1.500000    5.500000    0.000000    0.000000
+dihedral_coeff  9           0.000000    5.500000    0.000000    0.000000
+
+# -- cvff improperType parameter  --
+improper_coeff  1          10.500000          -1           2
